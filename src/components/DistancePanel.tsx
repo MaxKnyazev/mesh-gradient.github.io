@@ -1,4 +1,4 @@
-import { calcDistances } from '../lib/distances'
+import { calcDistances, formatDistancePercent } from '../lib/distances'
 import type { GradientState } from '../types'
 
 interface DistancePanelProps {
@@ -8,7 +8,12 @@ interface DistancePanelProps {
 export function DistancePanel({ state }: DistancePanelProps) {
   if (!state.measurementPoint) return null
 
-  const distances = calcDistances(state.measurementPoint, state.points)
+  const distances = calcDistances(
+    state.measurementPoint,
+    state.points,
+    state.width,
+    state.height,
+  )
 
   return (
     <section className="distance-panel">
@@ -32,7 +37,7 @@ export function DistancePanel({ state }: DistancePanelProps) {
                 />
                 {d.color}
               </td>
-              <td>{Math.round(d.distance)} px</td>
+              <td>{formatDistancePercent(d.distance)}</td>
             </tr>
           ))}
         </tbody>

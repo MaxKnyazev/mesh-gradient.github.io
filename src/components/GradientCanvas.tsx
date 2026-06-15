@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { calcDistances } from '../lib/distances'
+import { calcDistances, formatDistancePercent } from '../lib/distances'
 import { renderMeshGradient } from '../lib/renderMeshGradient'
 import type { GradientStateApi } from '../hooks/useGradientState'
 
@@ -67,7 +67,12 @@ export function GradientCanvas({ api }: GradientCanvasProps) {
     ctx.clearRect(0, 0, state.width, state.height)
 
     if (state.measurementPoint) {
-      const distances = calcDistances(state.measurementPoint, state.points)
+      const distances = calcDistances(
+        state.measurementPoint,
+        state.points,
+        state.width,
+        state.height,
+      )
       ctx.setLineDash([6, 4])
       ctx.lineWidth = 1.5
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'
@@ -87,7 +92,7 @@ export function GradientCanvas({ api }: GradientCanvasProps) {
 
         const lx = (mx + point.x) / 2
         const ly = (my + point.y) / 2
-        const label = `${Math.round(dist)} px`
+        const label = formatDistancePercent(dist)
         ctx.fillStyle = 'rgba(0, 0, 0, 0.65)'
         const tw = ctx.measureText(label).width
         ctx.fillRect(lx - tw / 2 - 4, ly - 8, tw + 8, 16)
