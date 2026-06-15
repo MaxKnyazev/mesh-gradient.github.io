@@ -8,22 +8,18 @@ interface DistancePanelProps {
 export function DistancePanel({ state }: DistancePanelProps) {
   if (!state.measurementPoint) return null
 
-  const distances = calcDistances(
-    state.measurementPoint,
-    state.points,
-    state.width,
-    state.height,
-  )
+  const distances = calcDistances(state.measurementPoint, state.points)
+  const total = distances.reduce((sum, item) => sum + item.distance, 0)
 
   return (
     <section className="distance-panel">
-      <h2>Расстояния от измерительной точки</h2>
+      <h2>Доли от измерительной точки</h2>
       <table>
         <thead>
           <tr>
             <th>Точка</th>
             <th>Цвет</th>
-            <th>Расстояние</th>
+            <th>Доля</th>
           </tr>
         </thead>
         <tbody>
@@ -41,6 +37,12 @@ export function DistancePanel({ state }: DistancePanelProps) {
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr>
+            <td colSpan={2}>Итого</td>
+            <td>{formatDistancePercent(total)}</td>
+          </tr>
+        </tfoot>
       </table>
     </section>
   )

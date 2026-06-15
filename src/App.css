@@ -83,6 +83,12 @@ body {
   align-items: start;
 }
 
+.side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .canvas-column {
   display: flex;
   flex-direction: column;
@@ -171,6 +177,27 @@ body {
   accent-color: #6366f1;
 }
 
+.panel-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #b0b0bc;
+  cursor: pointer;
+  user-select: none;
+}
+
+.panel-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+
+.panel-checkbox-below {
+  padding: 0 0.25rem;
+}
+
 .hint {
   margin: 0;
   font-size: 0.8rem;
@@ -207,6 +234,12 @@ body {
 .distance-panel th {
   color: #9a9aa8;
   font-weight: 500;
+}
+
+.distance-panel tfoot td {
+  font-weight: 600;
+  border-bottom: none;
+  border-top: 1px solid #3a3a48;
 }
 
 .color-swatch {

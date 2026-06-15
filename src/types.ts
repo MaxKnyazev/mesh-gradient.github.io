@@ -18,11 +18,15 @@ export interface GradientState {
   measurementPoint: MeasurementPoint | null
 }
 
+export interface ExportColorPoint extends ColorPoint {
+  chance?: number
+}
+
 export interface ExportData {
   version: 1
   width: number
   height: number
-  points: ColorPoint[]
+  points: ExportColorPoint[]
   measurementPoint: MeasurementPoint | null
 }
 

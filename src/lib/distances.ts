@@ -1,4 +1,5 @@
 import type { ColorPoint, MeasurementPoint } from '../types'
+import { computeMeasurementWeights } from './blendWeights'
 
 export interface PointDistance {
   pointId: string
@@ -13,19 +14,19 @@ export function formatDistancePercent(distance: number): string {
 export function calcDistances(
   measurementPoint: MeasurementPoint,
   points: ColorPoint[],
-  width: number,
-  height: number,
 ): PointDistance[] {
-  const fieldDiagonal = Math.hypot(width, height)
+  const weights = computeMeasurementWeights(
+    measurementPoint.x,
+    measurementPoint.y,
+    points,
+  )
+
   return points.map((point) => {
-    const pixelDistance = Math.hypot(
-      point.x - measurementPoint.x,
-      point.y - measurementPoint.y,
-    )
+    const weight = weights.find((item) => item.pointId === point.id)?.weight ?? 0
     return {
       pointId: point.id,
       color: point.color,
-      distance: (pixelDistance / fieldDiagonal) * 100,
+      distance: weight * 100,
     }
   })
 }

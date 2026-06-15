@@ -1,11 +1,30 @@
-import type { ExportData, GradientState } from '../types'
+import { computeMeasurementWeights } from './blendWeights'
+import type { ColorPoint, ExportData, GradientState } from '../types'
 
 export function exportToJson(state: GradientState): string {
+  const measurementWeights = state.measurementPoint
+    ? computeMeasurementWeights(
+        state.measurementPoint.x,
+        state.measurementPoint.y,
+        state.points,
+      )
+    : null
+
+  const points = state.points.map((point) => {
+    const exported: ExportData['points'][number] = { ...point }
+    if (measurementWeights) {
+      const weight =
+        measurementWeights.find((item) => item.pointId === point.id)?.weight ?? 0
+      exported.chance = Math.round(weight * 1000) / 10
+    }
+    return exported
+  })
+
   const data: ExportData = {
     version: 1,
     width: state.width,
     height: state.height,
-    points: state.points,
+    points,
     measurementPoint: state.measurementPoint,
   }
   return JSON.stringify(data, null, 2)
@@ -21,17 +40,30 @@ export function downloadJson(state: GradientState, filename = 'mesh-gradient.jso
   URL.revokeObjectURL(url)
 }
 
-function isColorPoint(value: unknown): value is ExportData['points'][number] {
-  if (!value || typeof value !== 'object') return false
+function parseColorPoint(value: unknown): ColorPoint | null {
+  if (!value || typeof value !== 'object') return null
   const p = value as Record<string, unknown>
-  return (
-    typeof p.id === 'string' &&
-    typeof p.x === 'number' &&
-    typeof p.y === 'number' &&
-    typeof p.color === 'string' &&
-    typeof p.radius === 'number' &&
-    p.radius > 0
-  )
+  if (
+    typeof p.id !== 'string' ||
+    typeof p.x !== 'number' ||
+    typeof p.y !== 'number' ||
+    typeof p.color !== 'string' ||
+    typeof p.radius !== 'number' ||
+    p.radius <= 0
+  ) {
+    return null
+  }
+  if (p.chance !== undefined && typeof p.chance !== 'number') {
+    return null
+  }
+
+  return {
+    id: p.id,
+    x: p.x,
+    y: p.y,
+    color: p.color,
+    radius: p.radius,
+  }
 }
 
 function isMeasurementPoint(
@@ -72,8 +104,13 @@ export function parseImportJson(text: string): GradientState {
     throw new Error('Должна быть хотя бы одна цветная точка')
   }
 
-  if (!data.points.every(isColorPoint)) {
-    throw new Error('Некорректные данные точек')
+  const points: ColorPoint[] = []
+  for (const point of data.points) {
+    const parsedPoint = parseColorPoint(point)
+    if (!parsedPoint) {
+      throw new Error('Некорректные данные точек')
+    }
+    points.push(parsedPoint)
   }
 
   const measurementPoint =
@@ -84,8 +121,6 @@ export function parseImportJson(text: string): GradientState {
         : (() => {
             throw new Error('Некорректная измерительная точка')
           })()
-
-  const points = data.points as ExportData['points']
 
   for (const point of points) {
     if (

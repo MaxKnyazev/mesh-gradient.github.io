@@ -20,6 +20,7 @@ export function useGradientState() {
   const [state, setState] = useState<GradientState>(DEFAULT_STATE)
   const [selection, setSelection] = useState<Selection>(null)
   const [addMode, setAddMode] = useState<AddMode>(null)
+  const [showPointBoundaries, setShowPointBoundaries] = useState(false)
 
   const addColorPoint = useCallback((x: number, y: number) => {
     const point: ColorPoint = {
@@ -171,6 +172,8 @@ export function useGradientState() {
     loadState,
     selectAt,
     setSelection,
+    showPointBoundaries,
+    setShowPointBoundaries,
   }
 }
 

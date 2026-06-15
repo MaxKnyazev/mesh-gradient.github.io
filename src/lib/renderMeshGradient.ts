@@ -1,6 +1,5 @@
 import type { ColorPoint } from '../types'
-
-const BACKGROUND = { r: 26, g: 26, b: 26 }
+import { computeGradientWeights } from './blendWeights'
 
 function parseColor(hex: string): { r: number; g: number; b: number } {
   const normalized = hex.replace('#', '')
@@ -28,41 +27,37 @@ export function renderMeshGradient(
   const imageData = ctx.createImageData(width, height)
   const data = imageData.data
 
-  const parsedPoints = points.map((p) => ({
-    x: p.x,
-    y: p.y,
+  const colorPoints: ColorPoint[] = points.map((p) => ({
+    ...p,
     radius: Math.max(p.radius, 1),
+  }))
+
+  const parsedPoints = colorPoints.map((p) => ({
+    id: p.id,
     ...parseColor(p.color),
   }))
 
+  const pointById = new Map(parsedPoints.map((point) => [point.id, point]))
+
   for (let py = 0; py < height; py++) {
     for (let px = 0; px < width; px++) {
-      let totalWeight = 0
+      const weights = computeGradientWeights(px, py, colorPoints)
+      const idx = (py * width + px) * 4
+
       let r = 0
       let g = 0
       let b = 0
 
-      for (const point of parsedPoints) {
-        const d = Math.hypot(px - point.x, py - point.y)
-        const w = Math.max(0, 1 - d / point.radius)
-        if (w > 0) {
-          r += w * point.r
-          g += w * point.g
-          b += w * point.b
-          totalWeight += w
-        }
+      for (const weight of weights) {
+        const point = pointById.get(weight.pointId)!
+        r += weight.weight * point.r
+        g += weight.weight * point.g
+        b += weight.weight * point.b
       }
 
-      const idx = (py * width + px) * 4
-      if (totalWeight > 0) {
-        data[idx] = r / totalWeight
-        data[idx + 1] = g / totalWeight
-        data[idx + 2] = b / totalWeight
-      } else {
-        data[idx] = BACKGROUND.r
-        data[idx + 1] = BACKGROUND.g
-        data[idx + 2] = BACKGROUND.b
-      }
+      data[idx] = r
+      data[idx + 1] = g
+      data[idx + 2] = b
       data[idx + 3] = 255
     }
   }

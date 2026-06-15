@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { calcDistances, formatDistancePercent } from '../lib/distances'
+import { nearestPointOnCircle } from '../lib/circleGeometry'
 import { renderMeshGradient } from '../lib/renderMeshGradient'
 import type { GradientStateApi } from '../hooks/useGradientState'
 
@@ -13,7 +14,7 @@ type DragTarget =
   | null
 
 export function GradientCanvas({ api }: GradientCanvasProps) {
-  const { state, selection, addMode, addColorPoint, setMeasurementPoint, movePoint, selectAt } =
+  const { state, selection, addMode, addColorPoint, setMeasurementPoint, movePoint, selectAt, showPointBoundaries } =
     api
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -67,12 +68,7 @@ export function GradientCanvas({ api }: GradientCanvasProps) {
     ctx.clearRect(0, 0, state.width, state.height)
 
     if (state.measurementPoint) {
-      const distances = calcDistances(
-        state.measurementPoint,
-        state.points,
-        state.width,
-        state.height,
-      )
+      const distances = calcDistances(state.measurementPoint, state.points)
       ctx.setLineDash([6, 4])
       ctx.lineWidth = 1.5
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'
@@ -84,14 +80,21 @@ export function GradientCanvas({ api }: GradientCanvasProps) {
         const dist = distances.find((d) => d.pointId === point.id)?.distance ?? 0
         const mx = state.measurementPoint.x
         const my = state.measurementPoint.y
+        const target = nearestPointOnCircle(
+          mx,
+          my,
+          point.x,
+          point.y,
+          point.radius,
+        )
 
         ctx.beginPath()
         ctx.moveTo(mx, my)
-        ctx.lineTo(point.x, point.y)
+        ctx.lineTo(target.x, target.y)
         ctx.stroke()
 
-        const lx = (mx + point.x) / 2
-        const ly = (my + point.y) / 2
+        const lx = (mx + target.x) / 2
+        const ly = (my + target.y) / 2
         const label = formatDistancePercent(dist)
         ctx.fillStyle = 'rgba(0, 0, 0, 0.65)'
         const tw = ctx.measureText(label).width
@@ -106,11 +109,13 @@ export function GradientCanvas({ api }: GradientCanvasProps) {
     for (const point of state.points) {
       const isSelected = selection?.type === 'color' && selection.id === point.id
 
-      if (isSelected) {
+      if (showPointBoundaries || isSelected) {
         ctx.beginPath()
         ctx.arc(point.x, point.y, point.radius, 0, Math.PI * 2)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)'
-        ctx.lineWidth = 1
+        ctx.strokeStyle = isSelected
+          ? 'rgba(255, 255, 255, 0.9)'
+          : 'rgba(255, 255, 255, 0.45)'
+        ctx.lineWidth = isSelected ? 1.5 : 1
         ctx.stroke()
       }
 
@@ -144,7 +149,7 @@ export function GradientCanvas({ api }: GradientCanvasProps) {
       ctx.fill()
       ctx.restore()
     }
-  }, [state, selection])
+  }, [state, selection, showPointBoundaries])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return
