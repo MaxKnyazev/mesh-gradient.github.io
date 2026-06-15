@@ -26,6 +26,11 @@ npm run build
 
 ## Деплой
 
-При пуше в ветку `main` GitHub Actions автоматически собирает проект и публикует в ветку `gh-pages`.
+При пуше в ветку `main` GitHub Actions автоматически собирает и публикует сайт.
 
-В настройках репозитория: **Settings → Pages → Source: Deploy from branch `gh-pages`**.
+**Один раз в настройках репозитория:**
+
+1. **Settings → Pages**
+2. **Build and deployment → Source:** выберите **GitHub Actions** (не «Deploy from branch main»)
+
+Сайт: [https://maxknyazev.github.io/mesh-gradient.github.io/](https://maxknyazev.github.io/mesh-gradient.github.io/)
